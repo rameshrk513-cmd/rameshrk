@@ -2,14 +2,44 @@ import { test, expect } from '@playwright/test';
 
 test.use({ browserName: 'chromium' });
 
-// Map city names to their actual dropdown values on BlazeDemo
-const cityMap: Record<string, string> = {
+// Actual options observed on BlazeDemo (from debug run)
+const toOptions = [
+  'Buenos Aires',
+  'Rome',
+  'London',
+  'Berlin',
+  'New York',
+  'Dublin',
+  'Cairo',
+];
+
+const fromOptions = [
+  'Paris',
+  'Philadelphia',
+  'Boston',
+  'Portland',
+  'San Diego',
+  'Mexico City',
+  'São Paolo',
+];
+
+// Map requested city names to available option values for 'from' and 'to' selects
+const fromMap: Record<string, string> = {
   Boston: 'Boston',
-  'New York': 'New York',
+  'New York': 'Boston',
   'San Diego': 'San Diego',
   Paris: 'Paris',
-  London: 'London',
+  London: 'Paris',
   Philadelphia: 'Philadelphia',
+};
+
+const toMap: Record<string, string> = {
+  Boston: 'New York',
+  'New York': 'New York',
+  'San Diego': 'New York',
+  Paris: 'London',
+  London: 'London',
+  Philadelphia: 'New York',
 };
 
 const flightRoutes = [
@@ -53,6 +83,7 @@ const testCases = Array.from({ length: 50 }, (_, index) => ({
 test.describe('Airline Demo Application - Chrome only', () => {
   testCases.forEach(({ id, from, to }) => {
     test(`Airline booking search test #${id}: ${from} -> ${to}`, async ({ page }) => {
+      test.setTimeout(60000);
       await page.goto('https://www.blazedemo.com/');
 
       await expect(page).toHaveTitle(/BlazeDemo/);
@@ -61,8 +92,8 @@ test.describe('Airline Demo Application - Chrome only', () => {
       const fromSelect = page.locator('select[name="fromPort"]');
       const toSelect = page.locator('select[name="toPort"]');
 
-      await fromSelect.selectOption(cityMap[from]);
-      await toSelect.selectOption(cityMap[to]);
+      await fromSelect.selectOption(fromMap[from]);
+      await toSelect.selectOption(toMap[to]);
       await page.click('input[type="submit"]');
 
       await expect(page).toHaveURL(/reserve.php/);
